@@ -3,17 +3,21 @@
 Ease collaboration on your Chef kitchen's secrets by storing the data online,
 for example in private Gists.
 
-The principle use case for this gem is when you ue Chef Solo. In this case
+# Idea
+
+The principal use case for this gem is when you use Chef Solo. In this case
 there is no Chef Server instance where users can go and edit secrets via a web
-interface. You have to check out the kitchen's repo, obtain a copy of the 
-`secret_file` and edit the data bag with the 'knife-solo_data_bag' gem.
+interface. If you want to edit secrets, you have to check out the kitchen's
+repo, obtain a copy of the `secret_file` and edit the data bag.
+
+# Example
 
 With this gem, you create a private Gist (or any other online secret file)
 and write your secrets in JSON format, e.g.:
 
 ```json
 {
-  "foo_api_token": "fffuuuuuuuuuuuuuuu"
+  "foo_api_token": "new_value",
   "database": {
     "password": "secret"
   }
@@ -25,19 +29,31 @@ then put the URL of the **raw** Gist data in your encrypted data bag:
 ```json
 {
   "id": "ciao",
-  "data_url": "https://gist.githubusercontent.com/myuser/f95499c75cbe04f8cd7c42732729167d24928009/raw/7a05c4f72e41c1022d9b8d9067cc9aba601ea99e/secrets.json"
+  "data_url": "https://gist.githubusercontent.com/myuser/f95499c75cbe04f8cd7c42732729167d24928009/raw/7a05c4f72e41c1022d9b8d9067cc9aba601ea99e/secrets.json",
+  "foo_api_token": "old_value"
 }
 ```
 
 In your Chef cookbooks, instead of using
 `Chef::EncryptedDataBagItem.load("foo", "bar").to_hash` to load your data,
-use `Chef::EncryptedDataBagUrl`.
+use `Chef::EncryptedDataBagUrl.load("foo", "bar").to_hash`.
 
-The result is a deep merge of the data in the data bag itself with the data
-from the supplied URL.
+The result is a **deep** merge of the data in the data bag itself with the data
+from the supplied URL:
+
+```json
+{
+  "id": "ciao",
+  "data_url": "https://gist.githubusercontent.com/myuser/f95499c75cbe04f8cd7c42732729167d24928009/raw/7a05c4f72e41c1022d9b8d9067cc9aba601ea99e/secrets.json",
+  "foo_api_token": "new_value",
+  "database": {
+    "password": "secret"
+  }
+}
+```
 
 Note that data bag contents are treated as defaults, and the data URL contents
-override specific values.
+override matching values (as in the example of `foo_api_token` above).
 
 ## Installation
 
@@ -57,7 +73,9 @@ Or install it yourself as:
 
 ## Usage
 
-TODO: Write usage instructions here
+```
+require "chef/encrypted_data_bag_url"
+```
 
 ## Development
 
